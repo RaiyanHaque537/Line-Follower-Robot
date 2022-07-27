@@ -1,0 +1,46 @@
+#include<EEPROM.h>
+#define sw 13
+#define light 12
+int state = 1023;
+
+void setup() {
+  pinMode(sw, INPUT_PULLUP);
+  pinMode(light, OUTPUT);
+  Serial.begin(9600);
+  state = EEPROM.read(1)*4;
+  Serial.println(state);
+}
+
+void loop() {
+  int r = button_read();
+  if (r == 1) {
+    state = 1023;
+    EEPROM.write(1,state/4);
+  }
+  else if (r == 2) {
+    state = 0;
+    EEPROM.write(1,state/4);
+  }
+  (state > 1000) ? digitalWrite(light, 1) : digitalWrite(light, 0);
+}
+
+int button_read() {
+  int cl = 0;
+p:  int t = 0;
+  if (digitalRead(sw) == 0) {
+    digitalWrite(light, HIGH);
+    while (digitalRead(sw) == 0) {
+      delay(1); t++;
+    }
+    digitalWrite(light, LOW);
+    if (t > 15) {
+      t = 0; cl++;
+      while (digitalRead(sw) == HIGH) {
+        delay(1); t++;
+        if (t > 1000) return cl;
+      }
+      goto p;
+    }
+  }
+  return cl;
+}
